@@ -1,10 +1,13 @@
-Oct 12, 2017 5:03:17 PM be.sizingservers.vapus.agent.Server send
-SEVERE: Error sending message: {0}
-java.net.SocketException: Socket is closed
-	at java.net.Socket.getOutputStream(Socket.java:943)
-	at be.sizingservers.vapus.agent.Server.send(Server.java:118)
-	at be.sizingservers.vapus.proc.agent.PollProcAndSendCounters.send(PollProcAndSendCounters.java:87)
-	at be.sizingservers.vapus.proc.agent.PollProcAndSendCounters.run(PollProcAndSendCounters.java:57)
-	at java.util.TimerThread.mainLoop(Timer.java:555)
-	at java.util.TimerThread.run(Timer.java:505)
+Oct 13, 2017 2:15:58 PM be.sizingservers.vapus.proc.agent.ProcMonitor setWDYH
+SEVERE: Could not set WDYH: {0}
+java.lang.NumberFormatException: For input string: "-c:"
+	at java.lang.NumberFormatException.forInputString(NumberFormatException.java:65)
+	at java.lang.Long.parseLong(Long.java:589)
+	at java.lang.Long.parseLong(Long.java:631)
+	at be.sizingservers.vapus.proc.agent.DiskUsage.addOrUpdateValue(DiskUsage.java:107)
+	at be.sizingservers.vapus.proc.agent.DiskUsage.getRawValues(DiskUsage.java:93)
+	at be.sizingservers.vapus.proc.agent.DiskUsage.init(DiskUsage.java:39)
+	at be.sizingservers.vapus.proc.agent.ProcMonitor.setWDYH(ProcMonitor.java:93)
+	at be.sizingservers.vapus.agent.Agent.main(Agent.java:82)
+	at be.sizingservers.vapus.proc.agent.ProcAgent.main(ProcAgent.java:22)
 

@@ -89,48 +89,10 @@ public class ProcMonitor extends Monitor {
     public void setWDYH() {
         if (Monitor.wdyh == null) {
             try {
-                //StringBuilder sb = new StringBuilder("dstat -vn -C total");
-
-                //grep cpu /proc/stat
-                //columns label user nice system idle iowait irq softirq
-                //calculate %age --> how?
-                /*String cpus = BashHelper.getOutput("grep cpu /proc/stat"); //Add cpus
-                int cpuCount = Integer.parseInt(BashHelper.getOutput("grep processor /proc/cpuinfo | wc -l"));
-                for (int i = 0; i != cpuCount; i++) {
-                    sb.append(",");
-                    sb.append(i);
-                }
-
-                //Add disks
-                sb.append(" -D total");
-                String[] disks = BashHelper.getOutput("ls -1 /sys/block | grep -v -E \"fd\\d*|loop\\d*|ram\\d*|sr\\d*\"").split("\\r?\\n");
-                for (int i = 0; i != disks.length; i++) {
-                    sb.append(",");
-                    sb.append(disks[i]);
-                }
-
-                //Add nics
-                sb.append(" -N total");
-                String[] nics = BashHelper.getOutput("/sbin/ifconfig | grep \"Link encap\" | awk '{print $1}' | grep -v lo").split("\\r?\\n");
-                for (int i = 0; i != nics.length; i++) {
-                    sb.append(",");
-                    sb.append(nics[i]);
-                }
-
-                //redirect the stderr stream (= 2) to the stdout stream(= 1) which is hidden, this way we can ignore the ugly "pipe broken" exception.
-                sb.append(" --noheaders --noupdate --nocolor --output \"");
-                sb.append(ProcMonitor.wdyhFile);
-                sb.append("\"> /dev/null 2> dstat_err");
-
-                String output = BashHelper.getOutput(sb.toString(), ProcMonitor.wdyhFile, Properties.getSendCountersInterval());
-
-                deleteFile(ProcMonitor.wdyhFile);
-
-                Monitor.wdyhEntities = determineWhatIHave(output);
-                Monitor.wdyh = new Gson().toJson(Monitor.wdyhEntities);
-                 */
                 CpuUsage.init();
-
+                DiskUsage.init();
+                NetworkUsage.init();
+                
                 Thread.sleep(Properties.getSendCountersInterval());
 
                 Monitor.wdyhEntities = getWIH();
@@ -161,19 +123,34 @@ public class ProcMonitor extends Monitor {
         if (wiw == null) {
 
             CpuUsage.addTo(entity);
+            DiskUsage.addTo(entity);
+            MemoryUsage.addTo(entity);
+            NetworkUsage.addTo(entity);
             return wih;
         }
 
-        boolean cpuAdded = false, memAdded = false, diskAdded = false, nicAdded = false;
+        boolean cpuAdded = false, memoryAdded = false, diskAdded = false, networkAdded = false;
         ArrayList<CounterInfo> wiwCounters = wiw.getSubs().get(0).getSubs();
         for(int i = 0 ; i != wiwCounters.size(); i++){
-            if(cpuAdded && memAdded && diskAdded && nicAdded) {
+            if(cpuAdded && memoryAdded && diskAdded && networkAdded) {
                 break;
             }
             
-            if(wiwCounters.get(0).getName().startsWith("cpu") && !cpuAdded){
+            if(wiwCounters.get(0).getName().equals("cpu") && !cpuAdded){
                 cpuAdded = true;
                 CpuUsage.addTo(entity);
+            }
+            else if(wiwCounters.get(0).getName().equals("disk") && !diskAdded){
+                diskAdded = true;
+                DiskUsage.addTo(entity);
+            }
+            else if(wiwCounters.get(0).getName().equals("memory") && !memoryAdded){
+                memoryAdded = true;
+                MemoryUsage.addTo(entity);
+            }
+            else if(wiwCounters.get(0).getName().equals("network") && !networkAdded){
+                networkAdded = true;
+                NetworkUsage.addTo(entity);
             }
         }
         return wih;
