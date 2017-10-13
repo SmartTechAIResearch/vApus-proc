@@ -1,0 +1,10 @@
+Oct 12, 2017 5:03:17 PM be.sizingservers.vapus.agent.Server send
+SEVERE: Error sending message: {0}
+java.net.SocketException: Socket is closed
+	at java.net.Socket.getOutputStream(Socket.java:943)
+	at be.sizingservers.vapus.agent.Server.send(Server.java:118)
+	at be.sizingservers.vapus.proc.agent.PollProcAndSendCounters.send(PollProcAndSendCounters.java:87)
+	at be.sizingservers.vapus.proc.agent.PollProcAndSendCounters.run(PollProcAndSendCounters.java:57)
+	at java.util.TimerThread.mainLoop(Timer.java:555)
+	at java.util.TimerThread.run(Timer.java:505)
+
