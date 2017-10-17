@@ -7,6 +7,7 @@
  */
 package be.sizingservers.vapus.proc.agent;
 
+import be.sizingservers.vapus.agent.Properties;
 import be.sizingservers.vapus.agent.util.BashHelper;
 import be.sizingservers.vapus.agent.util.CounterInfo;
 import be.sizingservers.vapus.agent.util.Entity;
@@ -26,7 +27,7 @@ public class DiskUsage {
         weightedTimeSpentDoingIOsInMs  
      */
     private enum lbls {
-        read, write
+        read, write, average_queue_size
     }
 
     //key = disk / partition label, value = [ sectorsRead, sectorsWritten  ]
@@ -52,17 +53,17 @@ public class DiskUsage {
 
             DiskUsage.bytesPerSector[i++] = bytesPSector;
         }
-    }   
+    }
 
-     /**
-     * 
+    /**
+     *
      * @param entity
-     * @throws IOException 
+     * @throws IOException
      */
     public static void addTo(Entity entity) throws IOException {
         HashMap<String, Double[]> calculatedValues = calculate();
 
-        for (int i = 0; i != lbls.values().length; i++) {
+        for (int i = 0; i != 2; i++) {
             String lbl = lbls.values()[i].name();
             CounterInfo ci = new CounterInfo("disk." + lbl + " (kB)");
 
@@ -73,11 +74,22 @@ public class DiskUsage {
 
             entity.getSubs().add(ci);
         }
+
+        String lbl = lbls.values()[2].name();
+        CounterInfo ci = new CounterInfo("disk." + lbl);
+
+        // Pivot
+        for (Map.Entry<String, Double[]> entry : calculatedValues.entrySet()) {
+            ci.getSubs().add(new CounterInfo(entry.getKey(), entry.getValue()[2]));
+        }
+
+        entity.getSubs().add(ci);
     }
-    
+
     /**
      *
-     * @return Calculated read and write in kB for all disk / partition instances.
+     * @return Calculated read and write in kB for all disk / partition
+     * instances.
      * @throws IOException
      */
     private static HashMap<String, Double[]> calculate() throws IOException {
@@ -104,15 +116,19 @@ public class DiskUsage {
      *
      * @param prevRaw
      * @param raw
-     * @return Kb calculated for sectorsRead, sectorsWritten disk usage.
+     * @return Kb calculated for sectors read, sectors written, weighted time
+     * spent doing I/Os (ms) (avgqu-sz) disk usage.
      */
     private static Double[] calculate(Long[] prevRaw, Long[] raw, int bytesPSector) {
         Double[] values = new Double[prevRaw.length];
 
         // sectorsRead, sectorsWritten 
-        for (int i = 0; i != raw.length; i++) {
+        for (int i = 0; i != 2; i++) {
             values[i] = ((double) (raw[i] - prevRaw[i])) / (bytesPSector * 1024);
         }
+
+        //avgqu-sz
+        values[2] = (double) (raw[2] - prevRaw[2]) / Properties.getSendCountersInterval();
 
         return values;
     }
@@ -120,7 +136,7 @@ public class DiskUsage {
     private static HashMap<String, Long[]> getRawValues() throws IOException {
         try {
             //device name, sectors read, sectors written
-            String[] arr = BashHelper.getOutput("grep -v loop /proc/diskstats --color=never | awk '{print $3, $6, $10}'").split("\\r?\\n");
+            String[] arr = BashHelper.getOutput("grep -v loop /proc/diskstats --color=never | awk '{print $3, $6, $10, $14}'").split("\\r?\\n");
 
             HashMap<String, Long[]> rawValues = new HashMap<String, Long[]>(arr.length);
             for (int i = 0; i != arr.length; i++) {
