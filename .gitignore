@@ -2,3 +2,5 @@
 /vApus-agent/dist/
 /vApus-proc/build/
 /vApus-proc/dist/
+*.log
+*/*.log

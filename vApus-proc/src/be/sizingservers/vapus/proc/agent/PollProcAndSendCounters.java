@@ -63,10 +63,10 @@ public class PollProcAndSendCounters extends TimerTask {
                 }
             }
         } catch (IOException ex) {
-            Agent.getLogger().log(Level.SEVERE, "Failed reading the file (stopping the timer task now): {0}", ex);
+            Agent.getLogger().log(Level.SEVERE, "Failed sending counters (stopping the timer task now): {0}", ex);
             super.cancel();
         } catch (Exception ex) {
-            Agent.getLogger().log(Level.SEVERE, "Failed reading the file (stopping the timer task now): {0}", ex);
+            Agent.getLogger().log(Level.SEVERE, "Failed sending counters (stopping the timer task now): {0}", ex);
             super.cancel();
         }
     }

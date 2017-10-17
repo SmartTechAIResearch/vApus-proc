@@ -12,6 +12,7 @@ import be.sizingservers.vapus.agent.util.CounterInfo;
 import be.sizingservers.vapus.agent.util.Entity;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -40,36 +41,69 @@ public class NetworkUsage {
         NetworkUsage.prevRawValues = getRawValues();
     }
 
+    /**
+     * 
+     * @param entity
+     * @throws IOException 
+     */
     public static void addTo(Entity entity) throws IOException {
+        HashMap<String, Double[]> calculatedValues = calculate();
+
+        for (int i = 0; i != NetworkUsage.lbls.values().length; i++) {
+            String lbl = NetworkUsage.lbls.values()[i].name();
+            CounterInfo ci = new CounterInfo("network." + lbl + " (kB)");
+
+            // Pivot
+            for (Map.Entry<String, Double[]> entry : calculatedValues.entrySet()) {
+                ci.getSubs().add(new CounterInfo(entry.getKey(), entry.getValue()[i]));
+            }
+
+            entity.getSubs().add(ci);
+        }
+    }
+    
+    /**
+     *
+     * @return Calculated rx and tx in kB for all nic instances.
+     * @throws IOException
+     */
+    private static HashMap<String, Double[]> calculate() throws IOException {
+        HashMap<String, Double[]> calculatedValues = new HashMap<String, Double[]>();
+
         HashMap<String, Long[]> rawValues = getRawValues();
 
-        CounterInfo ci = new CounterInfo("network");
-
-        for (HashMap.Entry<String, Long[]> entry : rawValues.entrySet()) {
+        int i = 0;
+        for (Map.Entry<String, Long[]> entry : rawValues.entrySet()) {
             String name = entry.getKey();
 
             Long[] prevRaw = NetworkUsage.prevRawValues.get(name);
             Long[] raw = entry.getValue();
 
-            ci.getSubs().add(get(name, prevRaw, raw));
+            calculatedValues.put(name, calculate(prevRaw, raw));
         }
-
-        entity.getSubs().add(ci);
 
         NetworkUsage.prevRawValues = rawValues;
+
+        return calculatedValues;
     }
 
-    private static CounterInfo get(String name, Long[] prevRaw, Long[] raw) {
-        CounterInfo ci = new CounterInfo(name);
-
-        //tx, rx
+    /**
+     *
+     * @param prevRaw
+     * @param raw
+     * @return Kb calculated for sectorsRead, sectorsWritten disk usage.
+     */
+    private static Double[] calculate(Long[] prevRaw, Long[] raw) {
+        Double[] values = new Double[prevRaw.length];
+              
+        //rx, tx
         for (int i = 0; i != raw.length; i++) {
-            ci.getSubs().add(new CounterInfo(NetworkUsage.lbls.values()[i].name() + " (kB)", ((double) (raw[i] - prevRaw[i])) / 1024));
+            values[i] = ((double) (raw[i] - prevRaw[i])) / 1024;
         }
 
-        return ci;
+        return values;
     }
-
+    
     private static HashMap<String, Long[]> getRawValues() throws IOException {
         try {
             String[] arr = BashHelper.getOutput("cat /proc/net/dev | awk '{print $1, $2, $10}'").split("\\r?\\n");

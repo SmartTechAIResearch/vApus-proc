@@ -12,6 +12,7 @@ import be.sizingservers.vapus.agent.util.CounterInfo;
 import be.sizingservers.vapus.agent.util.Entity;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -26,61 +27,94 @@ public class DiskUsage {
      */
     private enum lbls {
         read, write
-    }       
-    
+    }
+
     //key = disk / partition label, value = [ sectorsRead, sectorsWritten  ]
     private static HashMap<String, Long[]> prevRawValues;
-    private static int[] bytesPerSector;   
+    private static int[] bytesPerSector;
 
-    private DiskUsage(){
+    private DiskUsage() {
     }
-    
+
     public static void init() throws IOException {
         DiskUsage.prevRawValues = getRawValues();
-        DiskUsage.bytesPerSector = new int[DiskUsage.prevRawValues.size()];  
-        
+        DiskUsage.bytesPerSector = new int[DiskUsage.prevRawValues.size()];
+
         int i = 0;
         int bytesPSector = 512; //default
-        for (HashMap.Entry<String, Long[]> entry : prevRawValues.entrySet()) {
+        for (Map.Entry<String, Long[]> entry : prevRawValues.entrySet()) {
             //Partitions will fail (e.g. sda1), because a folder does not exists. We assume it has the same sector size as the previous dev (the disk, e.g. sda, if it is a partition).
             String output = BashHelper.getOutput("cat /sys/block/" + entry.getKey() + "/queue/hw_sector_size");
-        
-            if(!output.startsWith("cat")){ //error starts with cat.
+
+            if (!output.startsWith("cat")) { //error starts with cat.
                 bytesPSector = Integer.parseInt(output);
             }
-            
+
             DiskUsage.bytesPerSector[i++] = bytesPSector;
+        }
+    }   
+
+     /**
+     * 
+     * @param entity
+     * @throws IOException 
+     */
+    public static void addTo(Entity entity) throws IOException {
+        HashMap<String, Double[]> calculatedValues = calculate();
+
+        for (int i = 0; i != lbls.values().length; i++) {
+            String lbl = lbls.values()[i].name();
+            CounterInfo ci = new CounterInfo("disk." + lbl + " (kB)");
+
+            // Pivot
+            for (Map.Entry<String, Double[]> entry : calculatedValues.entrySet()) {
+                ci.getSubs().add(new CounterInfo(entry.getKey(), entry.getValue()[i]));
+            }
+
+            entity.getSubs().add(ci);
         }
     }
     
-    public static void addTo(Entity entity) throws IOException {
+    /**
+     *
+     * @return Calculated read and write in kB for all disk / partition instances.
+     * @throws IOException
+     */
+    private static HashMap<String, Double[]> calculate() throws IOException {
+        HashMap<String, Double[]> calculatedValues = new HashMap<String, Double[]>();
+
         HashMap<String, Long[]> rawValues = getRawValues();
-        
-        CounterInfo ci = new CounterInfo("disk");
 
         int i = 0;
-        for (HashMap.Entry<String, Long[]> entry : rawValues.entrySet()) {
+        for (Map.Entry<String, Long[]> entry : rawValues.entrySet()) {
             String name = entry.getKey();
 
             Long[] prevRaw = DiskUsage.prevRawValues.get(name);
             Long[] raw = entry.getValue();
 
-            ci.getSubs().add(get(name, prevRaw, raw, DiskUsage.bytesPerSector[i++]));
+            calculatedValues.put(name, calculate(prevRaw, raw, DiskUsage.bytesPerSector[i++]));
         }
 
-        entity.getSubs().add(ci);
-        
         DiskUsage.prevRawValues = rawValues;
+
+        return calculatedValues;
     }
 
-    private static CounterInfo get(String name, Long[] prevRaw, Long[] raw, int bytesPSector) {
-        CounterInfo ci = new CounterInfo(name);
-                 
+    /**
+     *
+     * @param prevRaw
+     * @param raw
+     * @return Kb calculated for sectorsRead, sectorsWritten disk usage.
+     */
+    private static Double[] calculate(Long[] prevRaw, Long[] raw, int bytesPSector) {
+        Double[] values = new Double[prevRaw.length];
+
+        // sectorsRead, sectorsWritten 
         for (int i = 0; i != raw.length; i++) {
-            ci.getSubs().add(new CounterInfo(DiskUsage.lbls.values()[i].name() + " (kB)", ((double) (raw[i] - prevRaw[i])) / (bytesPSector * 1024 )));
+            values[i] = ((double) (raw[i] - prevRaw[i])) / (bytesPSector * 1024);
         }
 
-        return ci;
+        return values;
     }
 
     private static HashMap<String, Long[]> getRawValues() throws IOException {

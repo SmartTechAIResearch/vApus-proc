@@ -7,13 +7,12 @@
  */
 package be.sizingservers.vapus.proc.agent;
 
-import be.sizingservers.vapus.agent.Agent;
 import be.sizingservers.vapus.agent.util.BashHelper;
 import be.sizingservers.vapus.agent.util.CounterInfo;
 import be.sizingservers.vapus.agent.util.Entity;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.logging.Level;
+import java.util.Map;
 
 /**
  *
@@ -27,35 +26,68 @@ public class CpuUsage {
 
     //key = cpu label, value = [user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice  ]
     private static HashMap<String, Long[]> prevRawValues;
-    
+
     private CpuUsage() {
     }
 
     public static void init() throws IOException {
         CpuUsage.prevRawValues = getRawValues();
     }
-    
+
+    /**
+     * 
+     * @param entity
+     * @throws IOException 
+     */
     public static void addTo(Entity entity) throws IOException {
+        HashMap<String, Double[]> calculatedValues = calculate();
+
+        for (int i = 0; i != lbls.values().length; i++) {
+            String lbl = lbls.values()[i].name();
+            CounterInfo ci = new CounterInfo("cpu." + lbl + " (%)");
+
+            // Pivot
+            for (Map.Entry<String, Double[]> entry : calculatedValues.entrySet()) {
+                ci.getSubs().add(new CounterInfo(entry.getKey(), entry.getValue()[i]));
+            }
+
+            entity.getSubs().add(ci);
+        }
+    }
+
+    /**
+     *
+     * @return Calculated usage percentages for all cpu instances.
+     * @throws IOException
+     */
+    private static HashMap<String, Double[]> calculate() throws IOException {
+        HashMap<String, Double[]> calculatedValues = new HashMap<String, Double[]>();
+
         HashMap<String, Long[]> rawValues = getRawValues();
 
-        CounterInfo ci = new CounterInfo("cpu");
-
-        for (HashMap.Entry<String, Long[]> entry : rawValues.entrySet()) {
+        for (Map.Entry<String, Long[]> entry : rawValues.entrySet()) {
             String name = entry.getKey();
 
             Long[] prevRaw = CpuUsage.prevRawValues.get(name);
             Long[] raw = entry.getValue();
 
-            ci.getSubs().add(get(name, prevRaw, raw));
+            calculatedValues.put(name, calculate(prevRaw, raw));
         }
 
-        entity.getSubs().add(ci);
-
         CpuUsage.prevRawValues = rawValues;
+
+        return calculatedValues;
     }
 
-    private static CounterInfo get(String name, Long[] prevRaw, Long[] raw) {
-        CounterInfo ci = new CounterInfo(name);
+    /**
+     *
+     * @param prevRaw
+     * @param raw
+     * @return Percentage calculated for user, nice, system, idle, iowait, irq,
+     * softirq, steal, guest, guest_nice cpu usage.
+     */
+    private static Double[] calculate(Long[] prevRaw, Long[] raw) {
+        Double[] values = new Double[prevRaw.length];
 
         long prevTotal = prevRaw[lbls.user.ordinal()] + prevRaw[lbls.nice.ordinal()] + prevRaw[lbls.system.ordinal()]
                 + prevRaw[lbls.idle.ordinal()] + prevRaw[lbls.iowait.ordinal()] + prevRaw[lbls.irq.ordinal()]
@@ -68,10 +100,10 @@ public class CpuUsage {
         long totald = total - prevTotal;
         //user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice   
         for (int i = 0; i != raw.length; i++) {
-            ci.getSubs().add(new CounterInfo(lbls.values()[i].name() + " (%)", (((double) (raw[i] - prevRaw[i])) / totald) * 100));
+            values[i] = (((double) (raw[i] - prevRaw[i])) / totald) * 100;
         }
 
-        return ci;
+        return values;
     }
 
     private static HashMap<String, Long[]> getRawValues() throws IOException {

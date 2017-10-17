@@ -92,6 +92,7 @@ public class ProcMonitor extends Monitor {
                 CpuUsage.init();
                 DiskUsage.init();
                 NetworkUsage.init();
+                SwapUsage.init();
                 
                 Thread.sleep(Properties.getSendCountersInterval());
 
@@ -126,31 +127,37 @@ public class ProcMonitor extends Monitor {
             DiskUsage.addTo(entity);
             MemoryUsage.addTo(entity);
             NetworkUsage.addTo(entity);
+            SwapUsage.addTo(entity);
             return wih;
         }
-
-        boolean cpuAdded = false, memoryAdded = false, diskAdded = false, networkAdded = false;
+        
+        boolean cpuAdded = false, memoryAdded = false, 
+                diskAdded = false, networkAdded = false, swapAdded = false;
         ArrayList<CounterInfo> wiwCounters = wiw.getSubs().get(0).getSubs();
         for(int i = 0 ; i != wiwCounters.size(); i++){
-            if(cpuAdded && memoryAdded && diskAdded && networkAdded) {
+            if(cpuAdded && memoryAdded && diskAdded && networkAdded && swapAdded) {
                 break;
             }
             
-            if(wiwCounters.get(0).getName().equals("cpu") && !cpuAdded){
+            if(wiwCounters.get(i).getName().startsWith("cpu") && !cpuAdded){
                 cpuAdded = true;
                 CpuUsage.addTo(entity);
             }
-            else if(wiwCounters.get(0).getName().equals("disk") && !diskAdded){
+            else if(wiwCounters.get(i).getName().startsWith("disk") && !diskAdded){
                 diskAdded = true;
                 DiskUsage.addTo(entity);
             }
-            else if(wiwCounters.get(0).getName().equals("memory") && !memoryAdded){
+            else if(wiwCounters.get(i).getName().startsWith("memory") && !memoryAdded){
                 memoryAdded = true;
                 MemoryUsage.addTo(entity);
             }
-            else if(wiwCounters.get(0).getName().equals("network") && !networkAdded){
+            else if(wiwCounters.get(i).getName().startsWith("network") && !networkAdded){
                 networkAdded = true;
                 NetworkUsage.addTo(entity);
+            }
+            else if(wiwCounters.get(i).getName().startsWith("swap") && !swapAdded){
+                swapAdded = true;
+                SwapUsage.addTo(entity);
             }
         }
         return wih;
