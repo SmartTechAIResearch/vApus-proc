@@ -46,7 +46,7 @@ Available counters:
       - time spent writing (ms)
       - I/Os currently in progress
       - time spent doing I/Os (ms)
-      - weighted time spent doing I/Os (ms)
+      - **weighted time spent doing I/Os (ms)**
       
       cat /sys/block/<disk, e.g. sda>/queue/hw_sector_size --> bytes per sector
 
