@@ -3,11 +3,10 @@ Extends from the vApus-agent Netbeans packages and vApus-vApus-agent communicati
 
 Available counters:
 
-* cpu#/ hiq idl siq sys usr wai
-* dsk/<label>/ read writ avgqu-sz
-* memory usage/ buff cach free used
-* net/<label>/ recv send
-* paging/ in out
-* procs/ blk new run
-* system/ csw int
-* total cpu usage/ hiq idl siq sys usr wai
+* **cpu**. *guest (%) guest_nice (%) idle (%) iowait (%) irq (%) nice (%) softirq (%) steal (%) system (%) user (%)* / instances and total
+* **disk**. *read (kB) write (kB)* / instances
+* **memory (kB)** / *buffers cached free used*
+* **network**. *rx (kB) .tx (kB)* / instances
+* **swap (kB)** / *in out*
+
+avgqu-sz (iostat) pending, maybe --> difficult to calculate.
