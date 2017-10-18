@@ -14,7 +14,7 @@ Available counters (in comments quotes from the sources further below and mentio
       since the system first booted.
       
       - user: normal processes executing in user mode
-      - nice: niced processes executing in user mode
+      - nice: niced (low priority) processes executing in user mode
       - system: processes executing in kernel mode
       - idle: twiddling thumbs
       - iowait: In a word, iowait stands for waiting for I/O to complete.
@@ -22,16 +22,15 @@ Available counters (in comments quotes from the sources further below and mentio
       
         1. Cpu will not wait for I/O to complete, iowait is the time that a task is waiting for I/O to complete.
         When cpu goes into idle state for outstanding task io, another task will be scheduled on this CPU.
-        2. In a multi-core CPU, the task waiting for I/O to complete is not running on any CPU, so the iowait
-        of each CPU is difficult to calculate.
+        2. In a multi-core CPU, the task waiting for I/O to complete is not running on any CPU, so the iowait of each CPU is difficult to calculate.
         3. The value of iowait field in /proc/stat will decrease in certain conditions.
         So, the iowait is not reliable by reading from /proc/stat.
       
       - irq: servicing interrupts
       - softirq: servicing softirqs
       - steal: involuntary wait
-      - guest: running a normal guest (time spent running a virtual CPU)
-      - guest_nice: running a niced guest
+      (- guest: running a normal guest (time spent running a virtual CPU)
+      - guest_nice: running a niced guest)
       
       Last two are included in user and nice and are thus dicarded.
 
