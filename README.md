@@ -3,11 +3,15 @@ Extends from the vApus-agent Netbeans packages and vApus-vApus-agent communicati
 
 The first counters received is never correct and should be discarded.
 
-Available counters:
+Available counters (in comments quotes from the sources further below and mentions of implementation in the monitor agent):
 
-* **cpu**. *guest (%) guest_nice (%) idle (%) iowait (%) irq (%) nice (%) softirq (%) steal (%) system (%) user (%)* / instances and total
+* **cpu**. *idle (%) iowait (%) irq (%) nice (%) softirq (%) steal (%) system (%) user (%)* / instances and total
 
       /proc/stat
+      
+      Various pieces   of  information about  kernel activity  are  available in the
+      /proc/stat file.  All  of  the numbers reported  in  this file are  aggregates
+      since the system first booted.
       
       - user: normal processes executing in user mode
       - nice: niced processes executing in user mode
@@ -26,12 +30,16 @@ Available counters:
       - irq: servicing interrupts
       - softirq: servicing softirqs
       - steal: involuntary wait
-      - guest: running a normal guest
+      - guest: running a normal guest (time spent running a virtual CPU)
       - guest_nice: running a niced guest
+      
+      Last two are included in user and nice and are thus dicarded.
 
 * **disk**. *read (kB) write (kB) average_queue_size* / instances
 
       /proc/diskstats
+      
+      All fields except field 9 are cumulative since boot.
       
       - major number
       - minor number
@@ -48,7 +56,21 @@ Available counters:
       - time spent doing I/Os (ms)
       - **weighted time spent doing I/Os (ms)**
       
-      cat /sys/block/<disk, e.g. sda>/queue/hw_sector_size --> bytes per sector
+      cat /sys/block/<disk, e.g. sda>/queue/hw_sector_size --> bytes per sector.
+      Needed for translating sectors read / written to kB.
+      
+      avgqu-sz is average concurrency overall during the interval.
+      It is computed from the last field in the file—the weighted number of milliseconds 
+      spent doing I/Os—divided by the milliseconds elapsed.
+      As per Little’s Law, the units cancel out and you just get the average number of 
+      operations in progress during the time period, which is a good measure of load or 
+      backlog.
+      The name, short for “average queue size”, is misleading. This value does not show
+      how many operations were queued but not yet being serviced—it shows how many were 
+      either in the queue waiting, or being serviced. The exact wording of the kernel
+      documentation is
+      “…as requests are given to appropriate struct request_queue and decremented as they 
+      finish.”
 
 * **memory (kB)** / *buffers cached free used*
 
@@ -74,6 +96,8 @@ Available counters:
       ...]  908188     5596    0    0    0     0       0          0 
       ...] 1375103    17405    0    0    0     0       0          0 
       ...] 1703981     5535    0    0    0     3       0          0 
+      
+      lo device included in the monitor: Might be interesting to see traffic between two services on the same machine.
 
      
 * **swap (kB)** / *in out*
@@ -84,6 +108,7 @@ Available counters:
       pswpin 2473
       pswpout 2995
 
+<http://man7.org/linux/man-pages/man5/proc.5.html>  
 <https://www.kernel.org/doc/Documentation/filesystems/proc.txt>  
 <https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats>  
 <https://www.kernel.org/doc/Documentation/iostats.txt>  

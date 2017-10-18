@@ -21,10 +21,10 @@ import java.util.Map;
 public class CpuUsage {
 
     private enum lbls {
-        user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice
+        user, nice, system, idle, iowait, irq, softirq, steal
     }
 
-    //key = cpu label, value = [user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice  ]
+    //key = cpu label, value = [ user, nice, system, idle, iowait, irq, softirq, steal ] // guest, guest_nice --> included in user and nice. Discarded. 
     private static HashMap<String, Long[]> prevRawValues;
 
     private CpuUsage() {
