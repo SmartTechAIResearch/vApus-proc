@@ -113,3 +113,4 @@ Available counters (in comments quotes from the sources further below and mentio
 <https://www.kernel.org/doc/Documentation/iostats.txt>  
 <http://linuxinsight.com/proc_vmstat.html>  
 <https://www.xaprb.com/blog/2010/01/09/how-linux-iostat-computes-its-results/>
+<https://en.wikipedia.org/wiki/Little%27s_law>
