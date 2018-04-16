@@ -124,7 +124,7 @@ public class DiskUsage {
 
         // sectorsRead, sectorsWritten 
         for (int i = 0; i != 2; i++) {
-            values[i] = ((double) (raw[i] - prevRaw[i])) / (bytesPSector * 1024);
+            values[i] = (((double) (raw[i] - prevRaw[i])) * bytesPSector) / (1024);
         }
 
         //avgqu-sz
