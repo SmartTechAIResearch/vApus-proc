@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 (c) Sizing Servers Lab
- * University College of West-Flanders, Department GKG * 
+ * 2014 Sizing Servers Lab, affiliated with IT bachelor degree NMCT
+ * University College of West-Flanders, Department GKG (www.sizingservers.be, www.nmct.be, www.howest.be/en) 
  * Author(s):
  * 	Dieter Vandroemme
  */
@@ -11,7 +11,7 @@ import be.sizingservers.vapus.agent.Agent;
 
 /**
  *
- * @author didjeeh
+*
  */
 public class ProcAgent extends Agent {
     /**

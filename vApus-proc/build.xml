@@ -17,6 +17,7 @@
         <copy file="src/daemon/start-as-daemon.sh" flatten="true" todir="${dist.dir}"/>
         <copy file="src/daemon/stop-daemon.sh" flatten="true" todir="${dist.dir}"/>
         <copy file="src/inxi" flatten="true" todir="${dist.dir}"/>
+        <copy file="src/license.txt" flatten="true" todir="${dist.dir}"/>
         <echo file="${dist.dir}/README.txt">Dependencies: 
 * JRE8 64-bit or more recent (default-jre-headless package for Debian)
 * optional: gawk, dmidecode</echo> 

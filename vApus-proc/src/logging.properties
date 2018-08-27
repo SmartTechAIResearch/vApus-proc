@@ -1,4 +1,4 @@
-# Copyright 2014 (c) Sizing Servers Lab
+# 2014 Sizing Servers Lab, affiliated with IT bachelor degree NMCT
 # University College of West-Flanders, Department GKG
 #
 # Author(s):
